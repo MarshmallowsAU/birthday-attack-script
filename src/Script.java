@@ -1,17 +1,10 @@
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.util.Random;
 
 /**
- * Jerry M Yang (z5421983)
+ * Jerry M Yang
  * 
  * Script created for COMP6841 to find the maximum number of ending charcaters in a hash are identical when
  * adding random whitespace characters to random lines in one of the files
@@ -19,36 +12,43 @@ import java.util.Random;
 
  public class Script {
     public static void main(String[] args) throws Exception {
-        int iterations = Integer.parseInt(args[0]);
+        try {
+            if (args.length != 1) System.out.println("Use: javac Script.java\n     java Script [int]");
 
-        File real = new File("src/real.txt");
-        String realHash = hashFile(real);
+            int iterations = Integer.parseInt(args[0]);
 
-        File fake = new File("src/fake.txt");
+            File real = new File("real.txt");
+            String realHash = hashFile(real);
 
-        Random random = new Random();
-        int numMatches = 0;
-        int maxMatches = 0;
+            File fake = new File("fake.txt");
 
-        for (int i = 0; i < iterations; i++) {
-            File temp = addRandomWhiteSpace(fake, random);
-            String fakeHash = hashFile(temp);
-            numMatches = compareHashes(realHash, fakeHash);
+            Random random = new Random();
+            int numMatches = 0;
+            int maxMatches = 0;
 
-            if (numMatches > maxMatches) {
-                System.out.println("Found new best file with hash: " + fakeHash + " comparing to: " + realHash + "\n - Matching a total of: " + numMatches + " characters!");
-                maxMatches = numMatches;
-                File newBest = new File("src/bestMatch.txt");
+            for (int i = 0; i < iterations; i++) {
+                File temp = addRandomWhiteSpace(fake, random);
+                String fakeHash = hashFile(temp);
+                numMatches = compareHashes(realHash, fakeHash);
 
-                if (!newBest.createNewFile()) newBest.delete();
-                newBest.createNewFile();
-                newBest.setWritable(true);
+                if (numMatches > maxMatches) {
+                    System.out.println("Found new best hash:\n - Fake: " + fakeHash + "\n - Real: " + realHash + "\n - Matching a total of: " + numMatches + " characters!");
+                    maxMatches = numMatches;
+                    File newBest = new File("bestMatch.txt");
 
-                copyFile(temp, newBest);
+                    if (!newBest.createNewFile()) newBest.delete();
+                    newBest.createNewFile();
+                    newBest.setWritable(true);
+
+                    copyFile(temp, newBest);
+                }
             }
-        }
 
-        System.out.println(">> Found best match with a total of: " + maxMatches + " character matches (reversed) over " + iterations + " iterations <<");
+            System.out.println(">> Found best match with a total of: " + maxMatches + " character matches (reversed) over " + iterations + " iterations <<");
+
+        } catch (Exception e) {
+            return;
+        }
     }
 
     /**
@@ -59,7 +59,7 @@ import java.util.Random;
      */
     private static File addRandomWhiteSpace(File fakeFile, Random random) throws Exception {
         BufferedReader myReader = new BufferedReader(new FileReader(fakeFile));
-        File temp = new File("src/temp.txt");
+        File temp = new File("temp.txt");
         String whiteSpace = String.valueOf(' ');
 
         if (!temp.createNewFile()) {
@@ -125,6 +125,14 @@ import java.util.Random;
         return reversedHash1.length();
     }
 
+    /**
+     * Copies all the contents of a file to another file
+     * (Used to ensure we have the file with added whitespace with the most identical characters in the hash)
+     *
+     * @param source
+     * @param dest
+     * @throws Exception
+     */
     private static void copyFile(File source, File dest) throws Exception {
         InputStream in = null;
         OutputStream out = null;
